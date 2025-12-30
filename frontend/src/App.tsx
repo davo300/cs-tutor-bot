@@ -5,22 +5,42 @@ function App() {
   const [input, setInput] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     setLoading(true);
     setResponse("");
+    setError(null);
 
-    const res = await fetch("http://localhost:8000/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: input }),
-    });
+    try {
+      const res = await fetch("http://localhost:8000/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: input }),
+      });
 
-    const data = await res.json();
-    setResponse(data.reply);
-    setLoading(false);
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Backend error ${res.status}: ${text}`);
+      }
+
+      const data = await res.json();
+
+      if (!data.reply) {
+        throw new Error("No reply field in response");
+      }
+
+      setResponse(data.reply);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Failed to fetch");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -36,6 +56,12 @@ function App() {
       <button onClick={sendMessage} disabled={loading}>
         {loading ? "Thinking..." : "Ask"}
       </button>
+
+      {error && (
+        <div className="error">
+          ❌ {error}
+        </div>
+      )}
 
       {response && (
         <div className="response">

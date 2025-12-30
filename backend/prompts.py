@@ -1,18 +1,28 @@
-def tutor_prompt(context: list[str], question: str) -> str:
-    joined_context = "\n\n".join(context)
+# backend/prompts.py
+
+def build_rag_prompt(question: str, contexts: list[dict]) -> str:
+    context_blocks = []
+
+    for c in contexts:
+        context_blocks.append(
+            f"SOURCE: {c['source']}\n{c['text']}"
+        )
+
+    context_text = "\n\n---\n\n".join(context_blocks)
 
     return f"""
-You are a university computer science tutor.
+You are a university-level COMP-2140 tutor.
 
-Use the provided course material to explain concepts.
-DO NOT give full solutions or final answers.
-Guide the student with intuition and steps.
+RULES:
+- Use ONLY the provided sources
+- When multiple files are mentioned across sources, list ALL of them
+- Cite the assignment number (A1–A5) when relevant"
 
-Course material:
-{joined_context}
+COURSE MATERIAL:
+{context_text}
 
-Student question:
+QUESTION:
 {question}
 
-Answer:
+ANSWER (no code, no full solutions):
 """
