@@ -107,4 +107,4 @@ Frontend runs at:
 ```
 ## Screenshots:
 
-![Alt text](screenshots/ui-screenshot.png)
+![Frontend UI](screenshots/ui-screenshot.png)
