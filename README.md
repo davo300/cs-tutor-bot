@@ -21,48 +21,48 @@ The system uses **course assignment PDFs as ground truth**, retrieves relevant s
 
 ## 🏗️ System Architecture
 
-PDF Assignments (A1–A5)
+- PDF Assignments (A1–A5)
 ↓
-Text Chunking
-↓
-Sentence Embeddings (MiniLM)
-↓
-FAISS Vector Index
-↓
-Relevant Context Retrieval
-↓
-Grounded Prompt Construction
-↓
-LLaMA Chat Completion
-↓
-Student-Facing Response (React UI)
+- Text Chunking
+- ↓
+- Sentence Embeddings (MiniLM)
+- ↓
+- FAISS Vector Index
+- ↓
+- Relevant Context Retrieval
+- ↓
+- Grounded Prompt Construction
+- ↓
+- LLaMA Chat Completion
+- ↓
+- Student-Facing Response (React UI)
 
 ## 📂 Project Structure
 
-cs-tutor-bot/
-├── backend/
-│ ├── main.py # FastAPI app & API routes
-│ ├── rag.py # PDF loading, chunking, FAISS retrieval
-│ ├── llm.py # Hugging Face LLaMA API client
-│ ├── prompts.py # Strict RAG prompt construction
-│ └── test_rag_*.py # RAG verification scripts
-│
-├── frontend/
-│ ├── src/
-│ │ ├── App.tsx # React UI
-│ │ └── index.tsx
-│ └── index.css
-│
-├── data/
-│ └── compilers/
-│ ├── 2140_A1.pdf
-│ ├── 2140_A2.pdf
-│ ├── 2140_A3.pdf
-│ ├── 2140_A4.pdf
-│ └── 2140_A5.pdf
-│
-├── requirements.txt
-└── README.md
+- cs-tutor-bot/
+- ├── backend/
+- │ ├── main.py # FastAPI app & API routes
+- │ ├── rag.py # PDF loading, chunking, FAISS retrieval
+- │ ├── llm.py # Hugging Face LLaMA API client
+- │ ├── prompts.py # Strict RAG prompt construction
+- │ └── test_rag_*.py # RAG verification scripts
+- │
+- ├── frontend/
+- │ ├── src/
+- │ │ ├── App.tsx # React UI
+- │ │ └── index.tsx
+- │ └── index.css
+- │
+- ├── data/
+- │ └── compilers/
+- │ ├── 2140_A1.pdf
+- │ ├── 2140_A2.pdf
+- │ ├── 2140_A3.pdf
+- │ ├── 2140_A4.pdf
+- │ └── 2140_A5.pdf
+- │
+- ├── requirements.txt
+- └── README.md
 
 
 ---
