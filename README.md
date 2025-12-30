@@ -108,4 +108,4 @@ Frontend runs at:
 ## Screenshots:
 
 ![Frontend UI](screenshots/ui.png)
- 
+![Frontend UI2](screenshots/ui-2.png)
