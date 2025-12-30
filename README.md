@@ -102,3 +102,9 @@ npm start
 
 Frontend runs at:
 👉 http://localhost:3000
+
+
+```
+## Screenshots:
+
+![Alt text](screenshots/ui-screenshot.png)
