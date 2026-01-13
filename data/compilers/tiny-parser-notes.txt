@@ -1,0 +1,6 @@
+Tiny is suitable for recursive descent parsing because:
+• The grammar is free of left recursion
+• Each non-terminal can be implemented as a function
+• Lookahead of one token is sufficient
+• The language is intentionally small and structured
+• Grammar rules map directly to parsing procedures

@@ -5,13 +5,14 @@ from typing import List, Dict
 import faiss
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
+import re
 
 DATA_DIR = "data/compilers"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
-CHUNK_SIZE = 350
-CHUNK_OVERLAP = 50
-TOP_K = 8      # necessary to grab relevent info
+CHUNK_SIZE = 250
+CHUNK_OVERLAP = 40
+TOP_K = 3      # necessary to grab relevent info
 
 
 def load_pdfs(folder_path: str) -> List[Dict]:
@@ -39,13 +40,38 @@ def load_pdfs(folder_path: str) -> List[Dict]:
     return docs
 
 
+
+def clean_text(text: str) -> str:
+    text = text.replace("\n", " ")
+    text = text.replace("\u00a0", " ")
+    text = text.replace("•", "")
+    text = text.replace("à", "")
+
+    # Remove numbered artifacts like (1) (2) (3)
+    text = re.sub(r"\(\d+\)", "", text)
+
+    # Remove common PDF table / label noise
+    text = re.sub(
+        r"\b(Operation|Notation|Definition|Example|SOURCE)\b",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+
+    # Collapse whitespace
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+
+
 def chunk_text(text: str, source: str) -> List[Dict]:
     words = text.split()
     chunks = []
 
     i = 0
     while i < len(words):
-        chunk = " ".join(words[i:i + CHUNK_SIZE])
+        chunk = clean_text(" ".join(words[i:i + CHUNK_SIZE]))
         chunks.append({
             "source": source,
             "text": chunk

@@ -1,28 +1,35 @@
 # backend/prompts.py
+from typing import List
 
-def build_rag_prompt(question: str, contexts: list[dict]) -> str:
-    context_blocks = []
 
-    for c in contexts:
-        context_blocks.append(
-            f"SOURCE: {c['source']}\n{c['text']}"
-        )
+def build_rag_prompt(
+    question: str,
+    contexts: List[str],
+) -> str:
+    """
+    Build a prompt where the model produces ONLY the answer text.
+    Sources are appended by the backend, not the model.
+    """
 
-    context_text = "\n\n---\n\n".join(context_blocks)
+    context_text = "\n\n".join(contexts)
 
     return f"""
 You are a university-level COMP-2140 tutor.
 
-RULES:
-- Use ONLY the provided sources
-- When multiple files are mentioned across sources, list ALL of them
-- Cite the assignment number (A1–A5) when relevant"
+Rules:
+- Answer ONLY the given question.
+- Give a direct definition only.
+- Do NOT include examples unless explicitly asked.
+- Do NOT explain related concepts.
+- Limit the answer to at most 2 sentences.
 
-COURSE MATERIAL:
+REFERENCE MATERIAL:
+-------------------
 {context_text}
+-------------------
 
 QUESTION:
 {question}
 
-ANSWER (no code, no full solutions):
-"""
+ANSWER:
+""".strip()

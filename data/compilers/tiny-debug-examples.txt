@@ -1,0 +1,7 @@
+Common Bug: END treated as identifier
+Cause: Keyword table not checked before identifier rule
+Tiny Rule: END is a reserved keyword
+
+Bug: Recursive descent parser loops infinitely
+Cause: Left-recursive grammar rule
+Tiny Grammar Rule: Grammar must be right-recursive
