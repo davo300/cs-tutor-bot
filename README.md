@@ -111,3 +111,32 @@ Frontend runs at:
 ![Frontend UI2](screenshots/ui-2.png)
 ![Frontend UI3](screenshots/ui-3.png)
 ![Frontend UI4](screenshots/ui-4.png)
+## Mathematical notation
+
+The PDF pipeline preserves Unicode operators, numbered items, and line breaks.
+Legacy Symbol-font operators are repaired only in text from that font (for example,
+the union glyph in `2140_lexer_2025.pdf`, PDF page 8). Each chunk retains its PDF
+page number, which appears beside the retrieved source in answers. Put lecture and
+assignment PDFs in `data/compilers/`; restart the backend after changing documents
+to rebuild the index.
+
+Answers support `$A \cap B$` inline math and display formulas delimited by `$$`
+on separate lines, using remark-math and KaTeX. Unicode `∩` and `∪` also display
+directly. The prompt asks the model to use these delimiters and preserve notation.
+Image-only pages and other broken font encodings still require OCR or manual
+source repair; the pipeline does not guess missing symbols.
+
+Checks:
+
+```bash
+venv/bin/python -m unittest backend.test_math_pipeline backend.test_llm
+cd frontend
+CI=true npm test -- --watchAll=false --runInBand
+npm run build
+```
+
+The Jest configuration lets the existing Create React App test runner load
+ES-module Markdown and math dependencies. These checks do not call the hosted
+Hugging Face endpoint.
+
+Generation uses a 256-token ceiling, a repetition penalty, and an explicit end-of-answer marker. Exact repeated prose paragraphs are removed before source references are appended; code and display math are preserved.

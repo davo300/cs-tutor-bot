@@ -1,6 +1,7 @@
 # backend/llm.py
 
 import os
+import re
 import requests
 from typing import Tuple
 
@@ -22,6 +23,26 @@ def get_hf_config() -> Tuple[str, str]:
     return endpoint, token
 
 
+def clean_generated_answer(text: str) -> str:
+    """Remove exact repeated prose blocks, preserving code and display math."""
+    text = text.split("<END_ANSWER>", 1)[0].strip()
+    result = []
+    seen = set()
+    protected = False
+    for block in re.split(r"\n[ \t]*\n", text):
+        key = re.sub(r"\s+", " ", block).strip()
+        contains_markup = "```" in block or "~~~" in block or "$$" in block
+        if protected or contains_markup or key not in seen:
+            result.append(block)
+        if not protected and not contains_markup:
+            seen.add(key)
+        # Never deduplicate lines inside multi-paragraph code/math blocks.
+        for marker in ("```", "~~~", "$$"):
+            if block.count(marker) % 2:
+                protected = not protected
+    return "\n\n".join(result).strip()
+
+
 def ask_llama(prompt: str) -> str:
     endpoint, token = get_hf_config()
 
@@ -30,15 +51,15 @@ def ask_llama(prompt: str) -> str:
     payload = {
         "inputs": prompt,
         "parameters": {
-            # Hard cap to prevent semantic looping
-            "max_new_tokens": 90,
-
-            # Low temperature = stable definitions
-            "temperature": 0.1,
+            # Leave room for explanations while limiting runaway continuation.
+            "max_new_tokens": 256,
+            "do_sample": False,
+            "repetition_penalty": 1.1,
+            "return_full_text": False,
 
             # Stop BEFORE repetition or metadata
             "stop": [
-                "\n\nSOURCE:",
+                "<END_ANSWER>",
                 "\nSOURCE:",
                 "\nREFERENCE MATERIAL",
                 "\nQUESTION:",
@@ -59,4 +80,4 @@ def ask_llama(prompt: str) -> str:
     response.raise_for_status()
     data = response.json()
 
-    return data["generated_text"].strip()
+    return clean_generated_answer(data["generated_text"])

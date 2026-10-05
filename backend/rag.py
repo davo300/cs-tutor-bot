@@ -5,9 +5,10 @@ from typing import List, Dict
 import faiss
 from sentence_transformers import SentenceTransformer
 from pypdf import PdfReader
-import re
+from pathlib import Path
+from backend.text_processing import clean_text, chunk_text, extract_page_text
 
-DATA_DIR = "data/compilers"
+DATA_DIR = str(Path(__file__).resolve().parent.parent / "data" / "compilers")
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 
 CHUNK_SIZE = 250
@@ -17,68 +18,15 @@ TOP_K = 3      # necessary to grab relevent info
 
 def load_pdfs(folder_path: str) -> List[Dict]:
     docs = []
-
     for filename in sorted(os.listdir(folder_path)):
         if not filename.lower().endswith(".pdf"):
             continue
-
-        path = os.path.join(folder_path, filename)
-        reader = PdfReader(path)
-
-        text = ""
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text += page_text + "\n"
-
-        if text.strip():
-            docs.append({
-                "source": filename,
-                "text": text
-            })
-
+        reader = PdfReader(os.path.join(folder_path, filename))
+        for number, page in enumerate(reader.pages, start=1):
+            text = extract_page_text(page)
+            if text:
+                docs.append({"source": filename, "page": number, "text": text})
     return docs
-
-
-
-def clean_text(text: str) -> str:
-    text = text.replace("\n", " ")
-    text = text.replace("\u00a0", " ")
-    text = text.replace("•", "")
-    text = text.replace("à", "")
-
-    # Remove numbered artifacts like (1) (2) (3)
-    text = re.sub(r"\(\d+\)", "", text)
-
-    # Remove common PDF table / label noise
-    text = re.sub(
-        r"\b(Operation|Notation|Definition|Example|SOURCE)\b",
-        "",
-        text,
-        flags=re.IGNORECASE,
-    )
-
-    # Collapse whitespace
-    text = re.sub(r"\s+", " ", text)
-
-    return text.strip()
-
-
-
-def chunk_text(text: str, source: str) -> List[Dict]:
-    words = text.split()
-    chunks = []
-
-    i = 0
-    while i < len(words):
-        chunk = clean_text(" ".join(words[i:i + CHUNK_SIZE]))
-        chunks.append({
-            "source": source,
-            "text": chunk
-        })
-        i += CHUNK_SIZE - CHUNK_OVERLAP
-
-    return chunks
 
 
 class RAGRetriever:
@@ -92,9 +40,12 @@ class RAGRetriever:
         docs = load_pdfs(DATA_DIR)
 
         for doc in docs:
-            self.chunks.extend(chunk_text(doc["text"], doc["source"]))
+            self.chunks.extend(chunk_text(doc["text"], doc["source"], doc["page"]))
 
         texts = [c["text"] for c in self.chunks]
+
+        if not texts:
+            raise ValueError(f"No extractable PDF text found in {DATA_DIR}")
 
         embeddings = self.embedder.encode(
             texts,
@@ -108,6 +59,8 @@ class RAGRetriever:
         print(f"[RAG] Indexed {len(self.chunks)} chunks")
 
     def retrieve(self, question: str, k: int = TOP_K) -> List[Dict]:
+        if k <= 0:
+            return []
         q = self.embedder.encode([question], convert_to_numpy=True).astype("float32")
-        _, idxs = self.index.search(q, k)
+        _, idxs = self.index.search(q, min(k, len(self.chunks)))
         return [self.chunks[i] for i in idxs[0]]

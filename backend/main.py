@@ -43,7 +43,7 @@ def dedupe_contexts(contexts: list[str]) -> list[str]:
     unique = []
 
     for text in contexts:
-        key = text[:200].lower()  # semantic fingerprint
+        key = text.strip()
         if key not in seen:
             seen.add(key)
             unique.append(text)
@@ -62,8 +62,9 @@ def chat(req: ChatRequest):
     sources = set()
 
     for c in chunks:
-        raw_contexts.append(c["text"])
-        sources.add(c["source"])
+        label = c["source"] + (f" (page {c['page']})" if c.get("page") else "")
+        raw_contexts.append(f"[{label}]\n{c['text']}")
+        sources.add(label)
 
     # 2️⃣ Deduplicate overlapping definitions
     context_blocks = dedupe_contexts(raw_contexts)
