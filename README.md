@@ -111,6 +111,7 @@ Frontend runs at:
 ![Frontend UI2](screenshots/ui-2.png)
 ![Frontend UI3](screenshots/ui-3.png)
 ![Frontend UI4](screenshots/ui-4.png)
+![Mobile Layout](screenshots/study-room.jpg)
 ## Mathematical notation
 
 The PDF pipeline preserves Unicode operators, numbered items, and line breaks.
